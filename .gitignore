@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.ipynb_checkpoints/
+
+# Logs
+*.log
+logs/
+wandb/
+tensorboard/
+
+# Large outputs
+outputs/
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.png
+*.jpg
+*.jpeg
+*.npy
+*.npz
+*.hdf5
+*.tar
+*.tar.gz
+*.zip
+*.safetensors
+*.pt
+*.pth
+*.ckpt
+*.bin
+
+# Linked external resources
+external/
+model/
+data/
+
+# Local env
+.env
+.env.*
+.DS_Store
