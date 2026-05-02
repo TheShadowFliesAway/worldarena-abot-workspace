@@ -1,0 +1,18 @@
+workspace_root: /root/autodl-tmp/worldarena-abot-workspace
+
+abot_repo: /root/autodl-tmp/ABot-PhysWorld
+abot_inference_dir: /root/autodl-tmp/ABot-PhysWorld/inference
+
+worldarena_data_root: /root/autodl-tmp/WorldArena_Robotwin2.0
+worldarena_test_dataset: /root/autodl-tmp/WorldArena_Robotwin2.0/test_dataset
+
+worldarena_jsonl_dir: /root/autodl-tmp/worldarena_jsonl
+
+model_root: /root/autodl-tmp/model
+wan_i2v_14b_480p: /root/autodl-tmp/model/Wan2.1-I2V-14B-480P
+abot_checkpoint: /root/autodl-tmp/model/abotpw_i2v_480p.safetensors
+abot_config: /root/autodl-tmp/model/configuration.json
+
+raw_output_root: /root/autodl-tmp/abot_worldarena_raw
+track1_eval_root: /root/autodl-tmp/worldarena_track1_eval
+track2_output_root: /root/autodl-tmp/track2_data_engine_abot
