@@ -2,6 +2,34 @@
 
 本仓库用于管理 **ABot-PhysWorld 在 WorldArena / RoboTwin2.0 上的实验流程**。仓库本身是实验工作区，主要放配置、脚本、实验入口和记录；ABot 源码、数据集、模型权重和大体积输出都放在 `/root/autodl-tmp` 下，通过软链接接入。
 
+## 当前只看这里
+
+当前主线是 **Track 2 Data Engine smoke**。有效产物只有这一份：
+
+```text
+/root/autodl-tmp/track2_data_engine_abot/smoke/image_action_dataset_track2_aligned
+```
+
+在当前 workspace 里也可以通过软链接进入：
+
+```text
+outputs/current_track2_aligned_dataset
+```
+
+这个目录是严格基于 Track 2 数据生成和对齐的 smoke 数据，包含：
+
+```text
+adjust_bottle/episode0
+adjust_bottle/episode1
+dataset_manifest.json
+```
+
+旧的占位数据和半成品已经放到：
+
+```text
+/root/autodl-tmp/track2_data_engine_abot/smoke/archive
+```
+
 ## codex的使用
 
 ### vscode需要加入配置Preferences: Open Remote Settings (JSON)
@@ -21,17 +49,16 @@ ssh -N -R 17890:127.0.0.1:7897 autodl-worldarena
 
 ### Track 1: Video Quality Evaluation
 
-当前优先任务是按 WorldArena Track 1 官方格式生成视频提交包，用官方服务端评测：
+当前优先任务是先跑通 **本地可复现、且不依赖 GT 视频/reference video 的 Track 1 指标**：
 
 ```text
 WorldArena first frame + prompt
 -> ABot-PhysWorld I2V
 -> generated video
--> package as official Track 1 submission
--> send to WorldArena official evaluator
+-> local no-GT Track 1 metrics
 ```
 
-Track 1 完整提交需要三套视频，每套 1000 条，共 3000 条：
+官方完整提交仍然需要三套视频，每套 1000 条，共 3000 条；但这一步先不作为当前主目标：
 
 | 输入 | 输出目录 | 作用 |
 |---|---|---|
@@ -53,11 +80,12 @@ Track 1 完整提交需要三套视频，每套 1000 条，共 3000 条：
 
 #### Track 1 本地评测现状
 
-公开 `test_dataset` 是 leaderboard 输入数据，不包含真实 GT 视频/帧。完整 16 指标里有部分指标依赖官方私有 GT/reference，因此本地不能完全复现官方 Track 1 分数。当前策略是：
+公开 `test_dataset` 是 leaderboard 输入数据，不包含真实 GT 视频/帧。完整 16 指标里有部分指标依赖官方私有 GT/reference，因此本地不能完全复现官方 Track 1 分数。当前策略改为：
 
-1. 本地只做小样本生成、视频规格检查、目录/命名检查。
-2. 不在本机配置完整 `gt_path` 和所有评测模型权重。
-3. 正式结果以官方邮件提交后的评测为准。
+1. 只跑不依赖 GT/reference video 的本地指标。
+2. 先用小样本检查生成、预处理、评测输出能否串起来。
+3. 依赖 GT/reference 的指标先不处理，不强行伪造 `gt_path`。
+4. 官方提交作为后续可选项，不是当前主线。
 
 16 个官方指标及本地 GT 依赖关系：
 
@@ -80,7 +108,33 @@ Track 1 完整提交需要三套视频，每套 1000 条，共 3000 条：
 | Controllability | Semantic Alignment | 需要 GT video caption/reference |
 | Controllability | Action Following | 不需要真实 GT video，但需要三组生成视频 |
 
-官方提交说明要点：
+当前优先尝试的本地 no-GT 指标：
+
+```text
+image_quality
+aesthetic_quality
+dynamic_degree
+flow_score
+motion_smoothness
+subject_consistency
+background_consistency
+photometric_smoothness / photometric_consistency
+interaction_quality
+perspectivity
+instruction_following
+```
+
+暂不处理的 GT/reference 依赖指标：
+
+```text
+JEPA Similarity
+Trajectory Accuracy
+Depth Accuracy
+Semantic Alignment
+PSNR / SSIM / PSNR_SSIM
+```
+
+官方提交说明要点，后续如果要提交再使用：
 
 - 使用 `test_dataset` 作为最终 leaderboard 数据。
 - 打包目录名建议为 `{Your_Model_Name}_eval`。
@@ -93,7 +147,7 @@ Track 1 完整提交需要三套视频，每套 1000 条，共 3000 条：
 
 ### Track 2: Data Engine
 
-Track 2 后续先做 Data Engine，而不是 Policy Evaluator：
+Track 2 先做 Data Engine，把数据生成和对齐流程打通；暂时不做 Policy Evaluator：
 
 ```text
 WorldArena 原始数据
@@ -141,6 +195,9 @@ PY
 | `/root/autodl-tmp/abot_worldarena_raw` | ABot 原始生成视频 |
 | `/root/autodl-tmp/worldarena_track1_eval` | Track 1 评测整理目录 |
 | `/root/autodl-tmp/track2_data_engine_abot` | Track 2 Data Engine 输出目录 |
+| `outputs/abot_worldarena_raw` | 指向 Track 1/旧 ABot 输出 |
+| `outputs/track2_data_engine_abot` | 指向 Track 2 Data Engine 输出根目录 |
+| `outputs/current_track2_aligned_dataset` | 指向当前有效 Track 2 aligned smoke 数据 |
 
 统一路径配置在：
 
@@ -170,6 +227,26 @@ Track 2 原始包：
 ```text
 /root/autodl-tmp/WorldArena_Robotwin2.0/track2_data_engine_validation.tar.gz
 /root/autodl-tmp/WorldArena_Robotwin2.0/track2_data_engine_test.tar.gz
+```
+
+Track 2 当前有效 smoke 产物：
+
+```text
+/root/autodl-tmp/track2_data_engine_abot/smoke/
+├── abot_track2_smoke.jsonl
+├── manifest.json
+├── source/
+├── abot_outputs_track2/
+├── abot_outputs_track2_fast_retry/
+├── image_action_dataset_track2_aligned/
+└── archive/
+```
+
+其中：
+
+```text
+image_action_dataset_track2_aligned/   # 当前有效数据
+archive/                               # 历史占位/半成品，可忽略
 ```
 
 ## 仓库结构
@@ -245,16 +322,68 @@ ffprobe -v error \
 tar -tf /root/autodl-tmp/WorldArena_Robotwin2.0/track2_data_engine_validation.tar.gz | head -n 80
 ```
 
+准备 Track 2 Data Engine smoke 输入，不会重新生成视频：
+
+```bash
+cd /root/autodl-tmp/worldarena-abot-workspace
+conda activate abot
+
+python scripts/prepare_track2_data_engine_smoke.py --max-samples 2
+```
+
+输出：
+
+```text
+/root/autodl-tmp/track2_data_engine_abot/smoke/abot_track2_smoke.jsonl
+/root/autodl-tmp/track2_data_engine_abot/smoke/manifest.json
+/root/autodl-tmp/track2_data_engine_abot/smoke/source/
+```
+
+后续如果要用 ABot 生成 Track 2 synthetic videos：
+
+```bash
+cd /root/autodl-tmp/ABot-PhysWorld/inference
+conda activate abot
+
+python inference.py \
+  --jsonl_path /root/autodl-tmp/track2_data_engine_abot/smoke/abot_track2_smoke.jsonl \
+  --output_dir /root/autodl-tmp/track2_data_engine_abot/smoke/abot_outputs_track2 \
+  --checkpoint_path /root/autodl-tmp/model/abotpw_i2v_480p.safetensors \
+  --num_samples 2
+```
+
+ABot 生成完成后，构造最小 image-action 数据目录：
+
+```bash
+cd /root/autodl-tmp/worldarena-abot-workspace
+conda activate abot
+
+python scripts/build_track2_image_action_dataset.py \
+  --manifest /root/autodl-tmp/track2_data_engine_abot/smoke/manifest.json \
+  --abot-results /root/autodl-tmp/track2_data_engine_abot/smoke/abot_outputs_track2/results.json \
+  --output-dir /root/autodl-tmp/track2_data_engine_abot/smoke/image_action_dataset_track2
+```
+
+如果中途 OOM 后用轻量参数重跑了部分样本，可以把多个 `results.json` 合并：
+
+```bash
+python scripts/build_track2_image_action_dataset.py \
+  --manifest /root/autodl-tmp/track2_data_engine_abot/smoke/manifest.json \
+  --abot-results \
+    /root/autodl-tmp/track2_data_engine_abot/smoke/abot_outputs_track2/results.json \
+    /root/autodl-tmp/track2_data_engine_abot/smoke/abot_outputs_track2_fast_retry/results.json \
+  --output-dir /root/autodl-tmp/track2_data_engine_abot/smoke/image_action_dataset_track2_aligned
+```
+
 ## 推荐执行顺序
 
 1. 用 `abot` 环境复现 2 条 smoke test。
-2. 从三套 JSONL 各抽 2 条，生成 6 条小样本视频。
-3. 检查视频规格：分辨率、帧数、fps、是否能正常解码。
-4. 整理成官方 Track 1 目录命名：`{model}_test`、`{model}_test_1`、`{model}_test_2`。
-5. 做 30 条或 150 条 subset，估算全量时间和显存稳定性。
-6. 全量生成 3000 条视频。
-7. 准备 `model_README.md`，打包 `{model}_eval.zip` 并邮件提交官方评测。
-8. Track 1 提交后，再启动 Track 2 Data Engine 最小实验。
+2. 用少量样本整理成 WorldArena 本地评测输入目录。
+3. 跑通 no-GT Track 1 指标的最小集合，先确认预处理、模型权重、输出 JSON/CSV 正常。
+4. 扩大到 30 条或 150 条 subset，得到 ABot Base 在 no-GT 指标上的本地结果。
+5. 暂不追求完整 3000 条官方提交包。
+6. 启动 Track 2 Data Engine 最小实验：解包、抽样、生成 synthetic frames、对齐 action/state/instruction。
+7. Track 2 打通后，再决定是否补官方 Track 1 提交或扩大全量实验。
 
 ## 给 Codex 的上下文
 
